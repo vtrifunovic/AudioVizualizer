@@ -65,12 +65,18 @@ def main():
     parser = argparse.ArgumentParser()
     
     parser.add_argument('--file', dest='imgFile', required=True)
+    parser.add_argument('--out', dest='outFile', required=False)
     args = parser.parse_args()
 
     imgFile = args.imgFile
+    
+    if args.outFile:
+    	outfile = args.outFile
+    else:
+    	outfile = 'out.png'
 
-    merged = create_img(imgFile ,True)
-    cv2.imwrite('out.png',merged)
+    merged = create_img(imgFile , True)
+    cv2.imwrite(outfile, merged)
 
 if __name__ == '__main__':
     main()
