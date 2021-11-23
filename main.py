@@ -6,7 +6,7 @@ from aubio import source, pitch, onset
 import sounddevice as sd
 import effects
 import cv2
-
+import numpy as np
 
 '''Default sounddevice code, leaving this in'''
 def int_or_str(text):
@@ -20,7 +20,7 @@ def create_visual(filename):
 	global effect
 	img = cv2.imread(filename)
 	dim = img.shape
-	kv = effects.k9effects()
+	kv = effects.k9effects(img)
 	i = 0
 	while 1:
 		# checks for dead frame, if found re-starts visual
@@ -80,7 +80,9 @@ def create_sound(songname):
 	tolerance = 0.74 # 0.74 is best on average, but more intense songs might be better at higher numbers
 	pitch_o = pitch("default", win_s, hop_s, samplerate) # setting a pitch detector
 	pitch_x = onset("default", win_s, hop_s, samplerate) # setting a onset detector
+	pitch_y = pitch("mcomb", win_s, hop_s, samplerate)
 	pitch_o.set_tolerance(tolerance)
+	pitch_y.set_tolerance(tolerance)
 	
 	try:
 		samplerate = sd.query_devices(args.device, 'output')['default_samplerate']
@@ -103,9 +105,9 @@ def create_sound(songname):
 			
 			# here we detect  the pitch and onset
 			samples, read = s()
-			pitch = pitch_o(samples)[0]
+			pitch2 = pitch_o(samples)[0] # use o for most artists
 			onset = pitch_x(samples)[0]
-			
+			pitch = pitch_y(samples)[0] # use y for Flare
 			# testing various parameters to determine which efect is best to be applied
 			if pitch == 0 and pastpitch != 0 and pasteffect != 'Glow':
 				if 'Treble' in queue or 'Glow' in queue:
@@ -115,8 +117,14 @@ def create_sound(songname):
 					effect = 'Glow'
 					queue.append(str(effect))
 			elif pitch < 70 and pitch > 30 and pitch is not pastpitch:
-				effect = 'SubBass'
-				queue.append(str(effect))
+				# remove this part for songs that aren't Flare's
+				if queue.count('MidBass') <= 2 and pasteffect == 'MidBass':
+					effect = 'Treble'
+					queue.append(str(effect))
+				else:
+					############################################
+					effect = 'SubBass'
+					queue.append(str(effect))
 			elif pitch > 70 and pitch < 80 or pitch == 280:
 				effect = "ScratchyBass"
 				queue.append(str(effect))
@@ -142,13 +150,12 @@ def create_sound(songname):
 				queue.append(str(effect))
 				
 			# print data, this can be supressed since it's really only for de-bugging
-			print(int(pitch), effect, onset)
-			
+			print(int(pitch), effect, onset, int(pitch2))
 			# re-shaping and passing audio data to the speakers
 			outdata.shape = samples.shape
-			outdata[:] = samples
+			outdata[:] = samples # *0.1
 			start_idx += read
-			
+			# print(power, s_freq)
 			# if no more audio data to read, set effect as 'End' and kill current thread
 			if read == 0:
 				effect = 'End'

@@ -5,8 +5,9 @@ import hueshift
 
 class k9effects:
 	
-	def __init__(self):
+	def __init__(self, img):
 		self.kernel = np.array(([1, -1, 1], [-1, 1, -1], [1, -1, 1]), dtype='uint8')
+		self.a = img.copy()
 	
 	# creates simple rgb split
 	def split_color(self, img):
@@ -40,7 +41,7 @@ class k9effects:
 		img = hueshift.create_img(img, 'Low')
 		img = cv2.dilate(img, (5, 15))
 		return img
-	
+
 	# MidBass effect, hue shift and dilation. no contrast stretch
 	def add_midbass(self, img):
 		img = hueshift.create_img(img, False)

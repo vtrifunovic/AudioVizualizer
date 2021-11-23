@@ -17,7 +17,7 @@ def create_img(filename, DEBUG):
 	b, g, r = cv2.split(img)
 
 	# adding 2 to all blue pixels, if debug is passed as high/low an appropriate contrast stretch is performed
-	b = b + 2
+	b = b+2
 	if DEBUG == 'High':
 		original = b.copy()
 
@@ -38,7 +38,7 @@ def create_img(filename, DEBUG):
 		b = cv2.LUT(b, table)
 	
 	# adding 1 to all green pixels, if debug is passed as high/low an appropriate contrast stretch is performed
-	g = g + 1
+	g = g+1
 	if DEBUG == 'High':
 		original = g.copy()
 
@@ -59,7 +59,7 @@ def create_img(filename, DEBUG):
 		g = cv2.LUT(g, table)
 		
 	# adding 1 to all red pixels, if debug is passed as high/low an appropriate contrast stretch is performed
-	r = r + 1
+	r = r+1
 	if DEBUG == 'High':
 		original = r.copy()
 
