@@ -9,7 +9,7 @@ Visual Example: https://youtu.be/qgZ1J5aoySA
 - opencv-python
 - numpy
 
-# Running the program
+# Viewing a video
 Program is meant to run from the console with arguments for the image to be used and what song to play.
 Currently Windows can only do .wav files, Linux can run .wav and mp3's, haven't tested on Mac.
 
@@ -20,6 +20,13 @@ Windows:
 `./main.py --image paris.jpeg --song why.wav`
 
 If a *ValueError: cannot reshape array of size x into shape (384,)* error is given, change the "hop_s" value in line 74 of main.py into whatever the x value is given in the error message.
+
+# Rendering a video
+Change the name of the image file in the code, and the name of the song, and run 
+
+`python3 rendervisual.py`
+
+to render a .avi video. The length of the video will be off from the length of the song, so use some form of video editing software to retime the output to fit the length of the song used. The effects should take place at the correct time once thats done. The video renders without any sound.
 
 # Independent file notes:
 Colorsplitter.py can be used as a regular rgb splitting file, just pass it multiple times on the same image until your desired distance is created.
