@@ -1,7 +1,7 @@
 # AudioVizualizer
 Python3 Image processing based audio vizualizer. Utilizes various image processing techniques to "react" to the music being played as best as possible. 
 
-Visual Example: https://youtu.be/qgZ1J5aoySA
+Visual Example: https://youtu.be/2gaiyuWxvVc or https://youtu.be/Myf0J8NAplU
 
 # Required Dependencies:
 - aubio
