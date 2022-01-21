@@ -7,7 +7,9 @@ import sounddevice as sd
 import effects
 import cv2
 import numpy as np
+import time
 
+	
 '''Default sounddevice code, leaving this in'''
 def int_or_str(text):
     try:
@@ -20,6 +22,7 @@ def create_visual(filename):
 	global effect
 	img = cv2.imread(filename)
 	dim = img.shape
+	print(dim)
 	kv = effects.k9effects(img)
 	i = 0
 	while 1:
@@ -27,9 +30,11 @@ def create_visual(filename):
 		if kv.check_black(img) == True:
 			img = cv2.imread(filename)
 		i+=1
+		img = kv.split_color(img)
 		img = kv.split_color(img) # split color for every frame
 		if i%2==0: # every other frame is either hue-shifted and dilated or eroded
-			img = cv2.dilate(img, (4,6))
+			img[0:667,495:505] = cv2.dilate(img[0:677,495:505], (8,12))
+			#img = cv2.dilate(img, (1,2))
 			img = kv.shift_hue(img)
 		else:
 			img = cv2.erode(img, (9,1))
@@ -60,10 +65,10 @@ def create_visual(filename):
 		cv2.namedWindow("Video", cv2.WINDOW_FREERATIO)
 		cv2.setWindowProperty("Video", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 		cv2.imshow("Video", img)
-		cv2.waitKey(5) # put as 1 on cpu's below 4GHZ max frequency
+		cv2.waitKey(1) # put as 1 on cpu's below 4GHZ max frequency or if dealing with 1920x1080
 	
 	# kills window and ends thread
-	print("Killing Window!")
+	print("Killing Window...")
 	cv2.destroyAllWindows()
 	return
 
@@ -90,7 +95,7 @@ def create_sound(songname):
 		pastpitch = 0
 		
 		# change to will, this will determine how often the "flashy" effects will occur. Shorter queue = more frequent flashes
-		queue = ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x']
+		queue = ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x']
 		
 		# this is the function which plays and analyzes the audio
 		def callback(outdata, frames, time, status):
@@ -105,16 +110,16 @@ def create_sound(songname):
 			
 			# here we detect  the pitch and onset
 			samples, read = s()
-			pitch2 = pitch_o(samples)[0] # use o for most artists
+			pitch = pitch_o(samples)[0] # use o for most artists
 			onset = pitch_x(samples)[0]
-			pitch = pitch_y(samples)[0] # use y for Flare
+			pitch2 = pitch_y(samples)[0] # use y for Flare
 			# testing various parameters to determine which efect is best to be applied
 			if pitch == 0 and pastpitch != 0 and pasteffect != 'Glow':
 				if 'Treble' in queue or 'Glow' in queue:
-					effect = ''
-					queue.append('x')
+					effect = 'SubBass'
+					queue.append('SubBass')
 				else:
-					effect = 'Glow'
+					effect = 'Treble'
 					queue.append(str(effect))
 			elif pitch < 70 and pitch > 30 and pitch is not pastpitch:
 				# remove this part for songs that aren't Flare's
@@ -128,7 +133,7 @@ def create_sound(songname):
 			elif pitch > 70 and pitch < 80 or pitch == 280:
 				effect = "ScratchyBass"
 				queue.append(str(effect))
-			elif pitch < 120 and pitch > 80:
+			elif pitch < 120 and pitch > 87:
 				effect = 'MidBass'
 				queue.append(str(effect))
 			elif pitch > 8000 and pitch is not pastpitch and pasteffect != 'Treble':
@@ -150,16 +155,14 @@ def create_sound(songname):
 				queue.append(str(effect))
 				
 			# print data, this can be supressed since it's really only for de-bugging
-			print(int(pitch), effect, onset, int(pitch2))
+			print(f'{str(int(pitch)).center(20)} | {str(onset).center(20)} | {str(int(pitch2)).center(20)} | {effect.center(20)} ')
 			# re-shaping and passing audio data to the speakers
 			outdata.shape = samples.shape
-			outdata[:] = samples # *0.1
+			outdata[:] = samples
 			start_idx += read
-			# print(power, s_freq)
 			# if no more audio data to read, set effect as 'End' and kill current thread
 			if read == 0:
 				effect = 'End'
-				print(queue)
 				raise sd.CallbackStop
 				return
 			pastpitch = pitch
@@ -169,6 +172,7 @@ def create_sound(songname):
 		# running the output stream to play audio
 		with sd.OutputStream(device=args.device, channels=1, callback=callback, samplerate=samplerate):
 			input()
+		return
 
 	except KeyboardInterrupt:
 		parser.exit('User killed program')
