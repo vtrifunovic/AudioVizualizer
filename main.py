@@ -22,18 +22,26 @@ def create_visual(filename):
 	global effect
 	img = cv2.imread(filename)
 	dim = img.shape
+	low = int(dim[1]/2)-5
+	high = int(dim[1]/2)+5
+	cv2.namedWindow("Video", cv2.WINDOW_FREERATIO)
+	cv2.setWindowProperty("Video", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 	print(dim)
 	kv = effects.k9effects(img)
 	i = 0
 	while 1:
+		stime = time.time()
 		# checks for dead frame, if found re-starts visual
-		if kv.check_black(img) == True:
+		df = kv.check_black(img)
+		if df == 0:
 			img = cv2.imread(filename)
 		i+=1
 		img = kv.split_color(img)
 		img = kv.split_color(img) # split color for every frame
 		if i%2==0: # every other frame is either hue-shifted and dilated or eroded
-			img[0:667,495:505] = cv2.dilate(img[0:677,495:505], (8,12))
+			if df < 10:
+				img = cv2.dilate(img, (1,2))
+			img[0:dim[0],low:high] = cv2.dilate(img[0:dim[0],low:high], (8,12))
 			#img = cv2.dilate(img, (1,2))
 			img = kv.shift_hue(img)
 		else:
@@ -62,8 +70,6 @@ def create_visual(filename):
 			cv2.destroyAllWindows()
 			break
 		# displays full screen video 
-		cv2.namedWindow("Video", cv2.WINDOW_FREERATIO)
-		cv2.setWindowProperty("Video", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 		cv2.imshow("Video", img)
 		cv2.waitKey(1) # put as 1 on cpu's below 4GHZ max frequency or if dealing with 1920x1080
 	
@@ -136,7 +142,7 @@ def create_sound(songname):
 			elif pitch < 120 and pitch > 87:
 				effect = 'MidBass'
 				queue.append(str(effect))
-			elif pitch > 8000 and pitch is not pastpitch and pasteffect != 'Treble':
+			elif pitch > 5000 and pitch is not pastpitch and pasteffect != 'Treble':
 				if 'Treble' in queue or 'Glow' in queue:
 					effect = ''
 					queue.append('x')
