@@ -21,9 +21,10 @@ def create_img(filename, DEBUG):
 	height = int(b.shape[0])
 	
 		
-	# divides the image by 250 to determine how much to stretch it by
-	wdivisor = int(width/250)
-	hdivisor = int(height/250)
+	# divides the image by 350 to determine how much to stretch it by
+	# use 250 if the speed seems too slow
+	wdivisor = int(width/350)
+	hdivisor = int(height/350)
 	
 	# calculating the new width and height by adding the divisor to it
 	nwidth = width+wdivisor
