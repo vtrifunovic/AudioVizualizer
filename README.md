@@ -19,7 +19,7 @@ Linux:
 Windows:
 `./main.py --image paris.jpeg --song why.wav`
 
-If a *ValueError: cannot reshape array of size x into shape (384,)* error is given, change the "hop_s" value in line 74 of main.py into whatever the x value is given in the error message.
+If a *ValueError: cannot reshape array of size x into shape (384,)* error is given, change the "hop_s" value in line 85 of main.py into whatever the x value is given in the error message.
 
 # Rendering a video
 Change the name of the image file in the code, and the name of the song, and run 
