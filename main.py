@@ -86,7 +86,12 @@ def create_sound(songname):
 	samplerate = 0
 
     # windows can only do wavs for now
-	s = source("./songs/" + songname, samplerate, hop_s)
+	try:
+		s = source("./songs/" + songname, samplerate, hop_s)
+		effect = ''
+	except:
+		print(f'{songname} not found. Closing...')
+		return
 	samplerate = s.samplerate
 	tolerance = 0.74 # 0.74 is best on average, but more intense songs might be better at higher numbers
 	pitch_o = pitch("default", win_s, hop_s, samplerate) # setting a pitch detector
@@ -189,7 +194,7 @@ if __name__ == "__main__":
 	# forgive me for global usage
 	global effect
 	global pasteffect
-	effect = ''
+	effect = 'End'
 	pasteffect = ''
 	
 	# adding argparse to so setting can be changed from command-line
