@@ -15,6 +15,7 @@ Currently Windows can only do .wav files, Linux can run .wav and mp3's, haven't 
 
 Linux:
 `python3 main.py --image paris.jpeg --song why.wav`
+- use paris.jpeg with high-end systems, chi.jpg is best for lower-end systems. Program can take most image formats.
 
 Windows:
 `./main.py --image paris.jpeg --song why.wav`
