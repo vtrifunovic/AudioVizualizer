@@ -50,7 +50,9 @@ def create_visual(filename):
 		dim = img.shape
 		kv = effects.k9effects2(img)
 		pastImgx = 'None'
+		backSub = cv2.createBackgroundSubtractorKNN()
 		kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7,7))
+		pasteffect = ''
 		while vidcap.isOpened():
 			success, img = vidcap.read()
 			if success:
@@ -76,32 +78,32 @@ def create_visual(filename):
 						pastImg = pastImg2
 						
 					elif effect == 'SubBass':
-						#pastImg = kv.add_subbass(pastImg)
-						for i in range(5):
-							img = kv.add_midbass(img, i)
-							img = cv2.dilate(img, kernel)
-						#img = kv.add_subbass(img)
-						#pastImg = np.abs(pastImg - pastImgx)
-						img = cv2.divide(img, pastImg)
+						if pasteffect != 'SubBass':
+							img = kv.add_treble(img, dim)
+						else:
+							img = cv2.Canny(img, 50, 150)
+							img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+							img = kv.split_color(img)
+							img = kv.shift_hue(img)
+							img = cv2.add(img, pastImg)
 						#img = img // pastImg
 					elif effect == 'ScratchyBass':
-						#img = kv.add_scratchybass(img)
+						img = kv.add_scratchybass(img)
 						pastImgx = kv.add_scratchybass(pastImg)
 						pastImg = cv2.add(pastImg, pastImgx)
-						#pastImg2 = img
-						img = cv2.add(img, pastImg)
 						pastImg = img
 						#img = pastImg
 						
 					elif effect == 'MidBass':
 						img = kv.add_midbass(pastImg, i)
+						img = cv2.blur(img, (50,50))
 						#img = kv.add_midbass(img, i)
 						#img = cv2.multiply(pastImg, img)
 						pastImg2 = img
 					
 					elif effect == 'Real':
 						pastImg = kv.add_real(pastImg)
-						img = kv.add_real(img)
+						img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 						pastImg2 = img
 						img = cv2.add(pastImg,img)
 						pastImg = pastImg2
@@ -110,6 +112,8 @@ def create_visual(filename):
 						pastImg = kv.add_glow(pastImg, img)
 						pastImg2 = img
 						pastImg = pastImg2
+					elif effect == '' and pasteffect == 'SubBass':
+						img = pastImg + img
 					
 					# Not an effect, done to synchronize thread killing
 					elif effect == 'End':
@@ -126,6 +130,7 @@ def create_visual(filename):
 					cv2.setWindowProperty("Video", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 					cv2.imshow("Video", img)
 					cv2.waitKey(25) # put as 1 on cpu's below 4GHZ max frequency or if dealing with 1920x1080
+					pasteffect = effect
 					#video.append(img)
 					#out.write(img)
 					#try:
@@ -191,7 +196,7 @@ def create_sound(songname):
 			if pitch == 0 and pastpitch != 0 and pasteffect != 'Glow':
 				effect = 'Treble'
 				queue.append(str(effect))
-			elif pitch < 70 and pitch > 30 and pitch is not pastpitch:
+			elif pitch < 70 and pitch > 10 and pitch is not pastpitch:
 				# remove this part for songs that aren't Flare's
 				if queue.count('MidBass') <= 2 and pasteffect == 'MidBass':
 					effect = 'Treble'

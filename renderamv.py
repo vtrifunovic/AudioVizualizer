@@ -23,11 +23,11 @@ def create_sound():
 	win_s = 4096
 	hop_s = 384 # hop_s will need to change depending on the system
 	samplerate = 0
-	out = cv2.VideoWriter('2077.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 23.99, (1920,1080))
+	out = cv2.VideoWriter('witchintro.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 24, (1920,1080))
 	i = 0
 	samplerate = int(sd.query_devices(args.device, 'output')['default_samplerate'])
     	# windows can only do wavs for now
-	s = source("./songs/2077.mp3", samplerate, hop_s)
+	s = source("./songs/witch.mp3", samplerate, hop_s)
 	samplerate = s.samplerate
 	tolerance = 0.74 # 0.74 is best on average, but more intense songs might be better at higher numbers
 	pitch_o = pitch("default", win_s, hop_s, samplerate) # setting a pitch detector
@@ -45,7 +45,14 @@ def create_sound():
 	
 	# this is the function which plays and analyzes the audio
 	def callback(outdata, frames, time, status):
-		my_choice = random.choice(clips)
+		try:
+			my_choice = random.choice(clips)
+		except:
+			print("No more clips.")
+			out.release()
+			raise sd.CallbackStop
+			return
+			
 		clip = f'./clips/{my_choice}'
 		print(f"New clip: {my_choice}")
 		vidcap = cv2.VideoCapture(clip)
@@ -118,8 +125,9 @@ def create_sound():
 			#print(int(pitch), effect, onset, int(pitch2))
 			# re-shaping and passing audio data to the speakers
 			outdata.shape = samples.shape
-			outdata[:] = samples
+			outdata[:] = 0*samples
 			start_idx += read
+			queue.pop(0)
 			# if no more audio data to read, set effect as 'End' and kill current thread
 			if read == 0:
 				effect = 'End'
@@ -131,7 +139,7 @@ def create_sound():
 			if ixx%5==0:
 				success, img = vidcap.read()
 				if success:
-					print(f"New frame: {i}")
+					print(f"New frame: {i}, effect: {effect}")
 					i+=1
 					if pastImgx == 'None':
 						pastImgx = "x"
@@ -152,32 +160,28 @@ def create_sound():
 							pastImg = pastImg2
 							
 						elif effect == 'SubBass':
-							#pastImg = kv.add_subbass(pastImg)
-							for i in range(5):
-								img = kv.add_midbass(img, i)
-								img = cv2.dilate(img, kernel)
-							#img = kv.add_subbass(img)
-							#pastImg = np.abs(pastImg - pastImgx)
-							img = cv2.divide(img, pastImg)
-							#img = img // pastImg
+							if pasteffect != 'SubBass':
+								img = kv.add_treble(img, dim)
+							else:
+								img = cv2.Canny(img, 50, 150)
+								img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+								img = kv.split_color(img)
+								img = kv.shift_hue(img)
+								img = cv2.add(img, pastImg)
 						elif effect == 'ScratchyBass':
-							#img = kv.add_scratchybass(img)
+							img = kv.add_scratchybass(img)
 							pastImgx = kv.add_scratchybass(pastImg)
 							pastImg = cv2.add(pastImg, pastImgx)
-							#pastImg2 = img
-							img = cv2.add(img, pastImg)
 							pastImg = img
-							#img = pastImg
 							
 						elif effect == 'MidBass':
 							img = kv.add_midbass(pastImg, i)
-							#img = kv.add_midbass(img, i)
-							#img = cv2.multiply(pastImg, img)
+							img = cv2.blur(img, (50,50))
 							pastImg2 = img
-						
+							
 						elif effect == 'Real':
 							pastImg = kv.add_real(pastImg)
-							img = kv.add_real(img)
+							img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 							pastImg2 = img
 							img = cv2.add(pastImg,img)
 							pastImg = pastImg2
@@ -186,9 +190,12 @@ def create_sound():
 							pastImg = kv.add_glow(pastImg, img)
 							pastImg2 = img
 							pastImg = pastImg2
+						elif effect == '' and pasteffect == 'SubBass':
+							img = cv2.add(img, pastImg)
 						
 						elif effect == 'End':
 							cv2.destroyAllWindows()
+							out.release()
 							print("Done rendering")
 							return
 						else:
@@ -200,7 +207,6 @@ def create_sound():
 						out.write(img)
 						pastpitch = pitch
 						pasteffect = effect
-						queue.pop(0)
 				else:
 					break
 
